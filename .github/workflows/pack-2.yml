@@ -1,0 +1,40 @@
+name: Build Desktop Apps (Win & Mac)
+
+# 触发条件：当你推送代码到 main 分支，或者在网页上手动点击运行
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: 
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    # 核心魔法：矩阵构建，同时启动 Win 和 Mac 两台虚拟机
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+    - name: 📥 获取最新代码
+      uses: actions/checkout@v4
+
+    - name: 🐍 配置 Python 环境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10' 
+        cache: 'pip' # 开启缓存，加速以后的打包
+
+    - name: 📦 安装依赖库
+      run: |
+        pip install -r requirements.txt
+
+    - name: 🔨 运行打包脚本 (build.py)
+      run: python build.py
+
+    - name: 📤 上传打包成果
+      uses: actions/upload-artifact@v4
+      with:
+        name: Audit_System_${{ matrix.os }}
+        path: dist/Audit_WalkThrough_System
